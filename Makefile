@@ -11,7 +11,7 @@ interpreter:
 # TODO: Make the binary just zero so the test scripts pick up on it.
 jit:
 	@mkdir -p bin
-	@$(CXX) -O0 -g -o bin/zero-jit jit.cpp assembler.cpp
+	@$(CXX) -O0 -g -o bin/zero-jit jit.cpp assembler.cpp compiler.cpp register.cpp
 	@codesign -s - -f --entitlements entitlements.plist ./bin/zero-jit
 	./bin/zero-jit ./test/helloworld.b
 

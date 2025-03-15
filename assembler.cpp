@@ -20,8 +20,6 @@
 #include <pthread.h>
 #include "assembler.hpp"
 
-#define __ this->
-
 Assembler::Assembler(uint32_t* baseAddress, uint32_t length)
     : _baseAddress(baseAddress), _pc(0), _length(length) {
   // At this point, we allow JIT writing.
@@ -31,7 +29,7 @@ Assembler::Assembler(uint32_t* baseAddress, uint32_t length)
 Assembler::~Assembler() {
   // Disallow JIT writing again.
   pthread_jit_write_protect_np(1);
-  // Clear instruction cache
+  // Clear instruction cache.
   char* charAddress = reinterpret_cast<char*>(_baseAddress);
   __builtin___clear_cache(charAddress, charAddress + _length);
 }
@@ -42,16 +40,27 @@ void Assembler::writeNext(uint32_t instr) {
   _pc++;
 }
 
+uint32_t Assembler::cbz(Register &reg) {
+  return 0u;
+}
+
+uint32_t Assembler::cbnz(Register &reg) {
+  return 0u;
+}
+
+void patch_branch(uint32_t offset, uint32_t label) {
+
+}
+
 void Assembler::prelude(char (&memory)[MEMORY_SIZE]) {
   // TODO: Implement.
 }
 
 void Assembler::postlude() {
-  __ ret();
+  ret();
 }
 
 void Assembler::ret() {
-  __ writeNext(0xd65f03c0);
+  writeNext(0xd65f03c0);
 }
 
-#undef __

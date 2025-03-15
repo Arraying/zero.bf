@@ -16,33 +16,13 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef assembler_hpp
-#define assembler_hpp
-
+#include <cassert>
 #include <cstdint>
-#include "constants.hpp"
 #include "register.hpp"
 
-class Assembler {
-private:
-  uint32_t* _baseAddress;
-  uint32_t _pc;
-  uint32_t _length;
+Register::Register(uint8_t identifier) : _identifier(identifier) {}
 
-  void writeNext(uint32_t instr);
-
-public:
-  Assembler(uint32_t* baseAddress, uint32_t length);
-  ~Assembler();
-
-  uint32_t cbz(Register &reg);
-  uint32_t cbnz(Register &reg);
-  void patch_branch(uint32_t offset, uint32_t label);
-
-  inline void ret();
-
-  void prelude(char (&memory)[MEMORY_SIZE]);
-  void postlude();
-};
-
-#endif
+uint8_t Register::encode() {
+  assert(_identifier >= 0 && _identifier < 32);
+  return _identifier;
+}
