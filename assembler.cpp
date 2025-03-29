@@ -16,21 +16,40 @@
  * this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <cassert>
+#include <sys/mman.h>
 #include <pthread.h>
 #include "assembler.hpp"
 
-Assembler::Assembler(uint32_t* baseAddress, uint32_t length)
-    : _baseAddress(baseAddress), _pc(0), _length(length) {
-  // At this point, we allow JIT writing.
-  pthread_jit_write_protect_np(0);
+Assembler::Assembler(uintmax_t heuristic) {
+  // Reserve the heuristic so we don't have to alloc every time we write.
+  _instructions.reserve(heuristic);
+
 }
 
-void Assembler::flush() {
+void* Assembler::assemble() {
+  // Create some executable memory.
+  // Every instruction is 4 bytes.
+  uint64_t numBytes = _instructions.size() * sizeof(uint32_t);
+  void* rawAddress = mmap(nullptr,
+                          numBytes,
+                          PROT_READ | PROT_WRITE | PROT_EXEC,
+                          MAP_PRIVATE | MAP_ANON | MAP_JIT,
+                          -1,
+                          0);
+  if (__builtin_expect(rawAddress == MAP_FAILED, false)) {
+    return nullptr;
+  }
+  // Allow JIT writing.
+  pthread_jit_write_protect_np(0);
+  // Should be slightly faster than memcpy.
+  std::copy(_instructions.begin(), _instructions.end(), reinterpret_cast<uint32_t*>(rawAddress));
   // Disallow JIT writing again.
   pthread_jit_write_protect_np(1);
   // Clear instruction cache.
-  char* charAddress = reinterpret_cast<char*>(_baseAddress);
-  __builtin___clear_cache(charAddress, charAddress + _length);
+  char* charAddress = reinterpret_cast<char*>(rawAddress);
+  __builtin___clear_cache(charAddress, charAddress + numBytes);
+  return rawAddress;
 }
 

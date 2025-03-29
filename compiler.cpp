@@ -17,7 +17,6 @@
  */
 
 #include "compiler.hpp"
-#include "constants.hpp"
 
 #define __ _assembler->
 
@@ -46,21 +45,21 @@ void Compiler::compile(char &c) {
     case ']': {
       __ ldrb(tmp1, memBase, memPtr);
       // The start and end points are in the program counter.
-      uint32_t start = _jumps.top();
+      size_t start = _jumps.top();
       _jumps.pop();
-      uint32_t end = __ cbnz(tmp1);
+      size_t end = __ cbnz(tmp1);
       // However, we need the offsets in actual memory address.
       // This is a bit useless because we will divide by 4 anyway, but it helps
       // in the intermeditate processing.
       // Forward: we jump to the instruction after.
-      int32_t deltaF = (static_cast<int32_t>(end) * INS_WIDTH)
-                       - (static_cast<int32_t>(start) * INS_WIDTH)
-                       + INS_WIDTH;
+      int32_t deltaF = static_cast<int32_t>(end)
+                       - static_cast<int32_t>(start)
+                       + 1;
       __ patchBranch(start, deltaF);
       // Backward: we jump to the instruction after too.
-      int32_t deltaB = (static_cast<int32_t>(start) * INS_WIDTH)
-                       - (static_cast<int32_t>(end) * INS_WIDTH)
-                       + INS_WIDTH;
+      int32_t deltaB = static_cast<int32_t>(start)
+                       - static_cast<int32_t>(end)
+                       + 1;
       __ patchBranch(end, deltaB);
       break;
     }

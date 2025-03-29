@@ -21,25 +21,21 @@
 
 #include <cassert>
 #include <cstdint>
-#include <iostream>
 #include <pthread.h>
+#include <vector>
 #include "register.hpp"
 
 class Assembler {
 private:
-  uint32_t* _baseAddress;
-  uint32_t _pc;
-  uint32_t _length;
+  std::vector<uint32_t> _instructions;
 
   inline void writeNext(uint32_t instr) {
-    assert((_pc * 4) < _length);
-    _baseAddress[_pc] = instr;
-    _pc++;
+    _instructions.push_back(instr); 
   }
 
 public:
-  Assembler(uint32_t* baseAddress, uint32_t length);
-  void flush();
+  Assembler(uintmax_t heuristic);
+  void* assemble();
 
   // The code that gets executed at the beginning of the subroutine.
   inline void prelude() {
@@ -121,36 +117,37 @@ public:
 
   // Branch if register is zero.
   // Returns the location, such that the jump can be patched later.
-  inline uint32_t cbz(const Register &reg) {
-    uint32_t where = _pc;
+  inline size_t cbz(const Register &reg) {
     // cbz x0, #0
     uint32_t instr = 0x34000000u;
     instr |= reg.encode();
     writeNext(instr);
+    size_t where = _instructions.size() - 1;
     return where;
   }
 
   // Branch if register is not zero.
   // Returns the location, such that the jump can be patched later.
-  inline uint32_t cbnz(const Register &reg) {
-    uint32_t where = _pc;
+  inline size_t cbnz(const Register &reg) {
     // cbz x0, #0
     uint32_t instr = 0x35000000u;
     instr |= reg.encode();
     writeNext(instr);
+    size_t where = _instructions.size() - 1;
     return where;
   }
 
   // Performs a branch patch given a location and offset (byte aligned).
-  inline void patchBranch(uint32_t address, int32_t rel) {
-    uint32_t instr = _baseAddress[address];
+  inline void patchBranch(size_t index, int32_t indexDifference) {
+    uint32_t instr = _instructions[index];
     // AArch64 expects the imm19 to be the address divided by 4.
-    rel = rel >> 2;
+    // Since we do indices, we do not have to do any processing.
+    uint32_t rel = indexDifference;
     // Mask the immediate.
     // This is necessary for negative numbers, not required for positive ones.
     uint32_t toEncode = static_cast<uint32_t>(rel) & ((1 << 19) - 1);
     instr |= (toEncode << 5);
-    _baseAddress[address] = instr;
+    _instructions[index] = instr;
   }
 
   // Writes an svc 0x80.

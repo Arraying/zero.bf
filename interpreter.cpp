@@ -31,7 +31,7 @@ void getInstructions(char*, std::vector<char>&, std::unordered_map<size_t, size_
 
 int main(int argc, char** argv) {
   // We expect most of the time the program is provided.
-  if (__builtin_expect(argc < 2, 0)) {
+  if (__builtin_expect(argc < 2, false)) {
     std::cerr << "zero: please provide the input file" << std::endl;
     return 1;
   }
@@ -59,14 +59,14 @@ int main(int argc, char** argv) {
         break;
       // Memory pointer: wrap around.
       case '<':
-        if (__builtin_expect(pointer == 0, 0)) {
+        if (__builtin_expect(pointer == 0, false)) {
           pointer = MEMORY_SIZE - 1;
         } else {
           pointer--;
         }
         break;
       case '>':
-        if (__builtin_expect(pointer == MEMORY_SIZE - 1, 0)) {
+        if (__builtin_expect(pointer == MEMORY_SIZE - 1, false)) {
           pointer = 0;
         } else {
           pointer++;
@@ -116,7 +116,7 @@ void getInstructions(char* fileName, std::vector<char> &instructions, std::unord
         stack.push(pc);
         break;
       case ']':
-        if (__builtin_expect(stack.size() == 0, 0)) {
+        if (__builtin_expect(stack.size() == 0, false)) {
           throw std::runtime_error("program parse error: expected [");
         }
         size_t begin = stack.top();
@@ -127,7 +127,7 @@ void getInstructions(char* fileName, std::vector<char> &instructions, std::unord
     }
     pc++;
   }
-  if (!__builtin_expect(stack.empty(), 1)) {
+  if (!__builtin_expect(stack.empty(), true)) {
     throw std::runtime_error("program parse error: expected ]");
   }
 }

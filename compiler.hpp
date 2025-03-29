@@ -20,13 +20,12 @@
 #define compiler_hpp
 
 #include "assembler.hpp"
-#include <cstdint>
 #include <stack>
 
 class Compiler {
 private:
   Assembler* _assembler;
-  std::stack<uint32_t> _jumps;
+  std::stack<size_t> _jumps;
 
 public:
   Compiler(Assembler* assembler);
