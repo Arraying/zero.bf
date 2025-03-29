@@ -43,8 +43,8 @@ int main(int argc, char** argv) {
   char* fileName = argv[1];
   uintmax_t fileSize = std::filesystem::file_size(fileName);
   // Perform a heuristic estimation of how many instructions we will need.
-  // Estimate 16 bytes per instruction; this is quite an overestimation.
-  uintmax_t heuristic = fileSize << 4;
+  // Estimate 1 Assembly instruction per real instruction.
+  uintmax_t heuristic = fileSize;
 
   // Create the memory and assembler.
   uint8_t memory[MEMORY_SIZE] = {0}; // Initialize to zero for compliance.

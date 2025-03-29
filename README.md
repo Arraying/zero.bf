@@ -1,13 +1,31 @@
 # zero.bf
 
 A project that intends to run a Brainfuck version of Mandelbrot in < 500ms.
-This project solely targets aarch64 macOS binaries.
+Achieved using a JIT compiler.
+This project solely targets AArch64 macOS binaries.
 
-## Building
+## Building and Running
 
 Use `make`, the default target will build an optimized binary.
-A debug build can be generated using `make dbg`. 
+Run with `./bin/zero-jit path/to/file.b`.
+For example, `./bin/zero-jit ./test/mandelbrot.b`.
 
-## Running
+A 50000-sized `uint8_t` array serves as the memory.
+The interpreter will wrap the pointer around.
+The JIT compiler does not wrap and will cause a segmenation fault.
 
-Run with `./bin/zero path/to/file.b`.
+# Development
+
+Current attained peak performance: 1200 ms.
+
+Debug builds can be generated with `make debug-interpreter` or `make debug-jit`.
+To benchmark, `make bench` runs an optimized JIT agains `mandelbrot.b`.
+
+List of planned optimizations:
+- Optimize file reading (`wc` inspiration).
+- Optimize `[-]` (requires lookaheads).
+- Optimize write/read with `printf`/`scanf`.
+
+Other things:
+- Safety in JIT mode by checking `[]` bounds.
+
