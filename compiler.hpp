@@ -26,10 +26,18 @@ class Compiler {
 private:
   Assembler* _assembler;
   std::stack<size_t> _jumps;
+  int8_t _cellDelta;
+  int64_t _pointerDelta;
 
 public:
   Compiler(Assembler* assembler);
   void compile(char &c);
+
+  // Flushes the cell value difference into an instruction.
+  void flushCell();
+
+  // Flushes the memory pointer difference into (an) instruction(s).
+  void flushPointer();
 
 };
 #endif

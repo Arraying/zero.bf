@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <pthread.h>
 #include <vector>
+#include "constants.hpp"
 #include "register.hpp"
 
 class Assembler {
@@ -75,12 +76,21 @@ public:
     writeNext(instr);
   }
 
+  // Move immediate to register.
+  inline void mov(const Register &dst, uint16_t imm) {
+    // mov x0, #0
+    uint32_t instr = 0xd2800000u;
+    instr |= dst.encode();
+    instr |= (imm << 5);
+    writeNext(instr);
+  }
+
   // Load byte from memory, extend rest of register with zero.
   inline void ldrb(const Register &dst,
                    const Register &base,
                    const Register &index) {
     // ldrb w0, [x0, x0]
-    uint32_t instr = 0x38606800;
+    uint32_t instr = 0x38606800u;
     instr |= dst.encode();
     instr |= (base.encode() << 5);
     instr |= (index.encode() << 16);
@@ -99,6 +109,34 @@ public:
     instr |= (left.encode() << 5);
     // Third register is the other operand.
     instr |= (right.encode() << 16);
+    writeNext(instr);
+  }
+
+  // Add with immediate.
+  inline void add(const Register &dst, const Register &src, uint16_t imm) {
+    assert(imm <= ADD_SUB_IMM_LIMIT); // should fit [0, 4096).
+    // add x0, x0, #0
+    uint32_t instr = 0x91000000u;
+    // First register is the destination.
+    instr |= dst.encode();
+    // Second register is the operand.
+    instr |= (src.encode() << 5);
+    // Then the immediate.
+    instr |= (imm << 10);
+    writeNext(instr);
+  }
+
+  // Substract with immediate.
+  inline void sub(const Register &dst, const Register &src, uint16_t imm) {
+    assert(imm <= ADD_SUB_IMM_LIMIT); // should fit [0, 4096).
+    // sub x0, x0, #0
+    uint32_t instr = 0xd1000000u;
+    // First register is the destination.
+    instr |= dst.encode();
+    // Second register is the operand.
+    instr |= (src.encode() << 5);
+    // Then the immediate.
+    instr |= (imm << 10);
     writeNext(instr);
   }
 
@@ -162,10 +200,10 @@ public:
     // mov x2, length
     // mov x16, #4
     // svc 0x80
-    mov(x0, constOne);
+    mov(x0, 1u);
     add(x1, memBase, memPtr);
     mov(x2, constOne);
-    writeNext(0xd2800090u);
+    mov(sys, 4u);
     syscall();
   }
 
@@ -176,10 +214,10 @@ public:
     // mov x2, length
     // mov x16, #3
     // svc 0x80
-    writeNext(0xd2800000u);
+    mov(x0, 0u);
     add(x1, memBase, memPtr);
     mov(x2, constOne);
-    writeNext(0xd2800070u);
+    mov(sys, 3u);
     syscall();
   }
 

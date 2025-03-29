@@ -20,9 +20,13 @@
 #define constants_hpp
 
 #include <cstddef>
+#include <cstdint>
 
 // We work with a 50k memory cell, could be more, could be less.
 // Wrap-around is forbidden, so it's good to have a large space.
 constexpr size_t MEMORY_SIZE = 50000;
+
+// How many times we can add/sub.
+constexpr uint16_t ADD_SUB_IMM_LIMIT = (1 << 12) - 1;
 
 #endif

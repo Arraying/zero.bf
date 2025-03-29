@@ -17,32 +17,52 @@
  */
 
 #include "compiler.hpp"
+#include "constants.hpp"
+#include <iostream>
 
-#define __ _assembler->
+// Macro magic to make life easier.
+#define __ _assembler-> 
+#define REPEATER(fn, arg)                                                \
+uint64_t iters = abs / ADD_SUB_IMM_LIMIT, rem = abs % ADD_SUB_IMM_LIMIT; \
+for (uint64_t i = 0; i < iters; i++) {                                   \
+  fn(memPtr, memPtr, ADD_SUB_IMM_LIMIT);                                 \
+}                                                                        \
+fn(memPtr, memPtr, rem);
 
-Compiler::Compiler(Assembler* assembler) : _assembler(assembler) {}
+// Create a blank compiler.
+Compiler::Compiler(Assembler* assembler) 
+  : _assembler(assembler), _cellDelta(0u), _pointerDelta(0u) {}
 
+// Compile an individual character.
 void Compiler::compile(char &c) {
   switch (c) {
     case '+':
-      __ add(tmp1, memBase, memPtr);
-      __ ldaddb(tmp1, constOne);
+      flushPointer();
+      _cellDelta++;
       break;
     case '-':
-      __ add(tmp1, memBase, memPtr);
-      __ ldaddb(tmp1, constNegOne);
+      flushPointer();
+      _cellDelta--;
       break;
     case '>':
-      __ add(memPtr, memPtr, constOne);
+      flushCell();
+      _pointerDelta++;
+      //__ add(memPtr, memPtr, constOne);
       break;
     case '<':
-      __ add(memPtr, memPtr, constNegOne);
+      flushCell();
+      _pointerDelta--;
+      //__ add(memPtr, memPtr, constNegOne);
       break;
     case '[':
+      flushCell();
+      flushPointer();
       __ ldrb(tmp1, memBase, memPtr);
       _jumps.push(__ cbz(tmp1));
       break;
     case ']': {
+      flushCell();
+      flushPointer();
       __ ldrb(tmp1, memBase, memPtr);
       // The start and end points are in the program counter.
       size_t start = _jumps.top();
@@ -64,12 +84,61 @@ void Compiler::compile(char &c) {
       break;
     }
     case '.':
+      flushCell();
+      flushPointer();
       __ syscallOut();
       break;
     case ',':
+      flushCell();
+      flushPointer();
       __ syscallIn();
       break;
   }
 }
 
+void Compiler::flushCell() {
+  // Only flush if there is something to flush.
+  if (_cellDelta == 0) {
+    return;
+  }
+  // Write the address to tmp1 and the value to write to tmp2.
+  __ add(tmp1, memBase, memPtr); 
+  uint8_t abs = std::abs(_cellDelta);
+  if (_cellDelta > 0) {
+    __ mov(tmp2, abs);
+    __ ldaddb(tmp1, tmp2);
+  } else if (_cellDelta < 0) {
+    // TODO: Subtraction with negative values.
+    for (uint8_t i = 0; i < abs; i++) {
+      __ ldaddb(tmp1, constNegOne);
+    }
+  }
+  _cellDelta = 0;
+}
+
+// Repeats an operation in case it is not within numeric limits.
+template <typename Op>
+void repeatAddSubImmLimit(Op func, uint64_t abs) {
+  uint64_t iters = abs / ADD_SUB_IMM_LIMIT, rem = abs % ADD_SUB_IMM_LIMIT;
+  for (uint64_t i = 0; i < iters; i++) {
+    func(memPtr, memPtr, ADD_SUB_IMM_LIMIT);
+  }
+  func(memPtr, memPtr, rem);
+}
+
+void Compiler::flushPointer() {
+  // Only flush if there is something to flush.
+  if (_pointerDelta == 0) {
+    return;
+  }
+  uint64_t abs = std::abs(_pointerDelta);
+  if (_pointerDelta > 0) {
+    REPEATER(__ add, abs);
+  } else {
+    REPEATER(__ sub, abs);
+  }
+  _pointerDelta = 0;
+}
+
+#undef REPEATER
 #undef __

@@ -47,6 +47,7 @@ const Register constOne(11u);
 const Register constNegOne(12u);
 const Register tmp1(13u);
 const Register tmp2(14u);
+const Register sys(16u);
 const Register xzr_sp(31u);
 
 #endif
