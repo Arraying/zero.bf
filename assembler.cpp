@@ -26,41 +26,11 @@ Assembler::Assembler(uint32_t* baseAddress, uint32_t length)
   pthread_jit_write_protect_np(0);
 }
 
-Assembler::~Assembler() {
+void Assembler::flush() {
   // Disallow JIT writing again.
   pthread_jit_write_protect_np(1);
   // Clear instruction cache.
   char* charAddress = reinterpret_cast<char*>(_baseAddress);
   __builtin___clear_cache(charAddress, charAddress + _length);
-}
-
-void Assembler::writeNext(uint32_t instr) {
-  assert(_pc < _length);
-  _baseAddress[_pc] = instr;
-  _pc++;
-}
-
-uint32_t Assembler::cbz(Register &reg) {
-  return 0u;
-}
-
-uint32_t Assembler::cbnz(Register &reg) {
-  return 0u;
-}
-
-void patch_branch(uint32_t offset, uint32_t label) {
-
-}
-
-void Assembler::prelude(char (&memory)[MEMORY_SIZE]) {
-  // TODO: Implement.
-}
-
-void Assembler::postlude() {
-  ret();
-}
-
-void Assembler::ret() {
-  writeNext(0xd65f03c0);
 }
 

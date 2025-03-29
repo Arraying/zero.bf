@@ -22,12 +22,11 @@
 #include <fstream>
 #include <filesystem>
 #include <iostream>
-#include <libkern/OSCacheControl.h>
 #include <limits>
-#include <stack>
 #include <sys/mman.h>
 #include "assembler.hpp"
 #include "constants.hpp"
+#include "compiler.hpp"
 
 using std::uintmax_t;
 using std::fstream;
@@ -47,7 +46,8 @@ int main(int argc, char** argv) {
   // Perform the memory mapping. This is a pessimistic estimate. We assume that
   // we perform 4 instructions (128 bits) per BF instruction, plus an additional
   // 8 instructions for setup and teardown.
-  uintmax_t instructionSize = (INS_WIDTH * fileSize) + (INS_WIDTH * INS_BUFFER);
+  //uintmax_t instructionSize = (INS_WIDTH * fileSize) + (INS_WIDTH * INS_BUFFER);
+  uintmax_t instructionSize = 1 << 20;
   // Assert that we can address this, it's an assertion due to unlikeliness.
   assert(instructionSize < std::numeric_limits<uint32_t>::max());
   // Create the call via mmap.
@@ -64,28 +64,31 @@ int main(int argc, char** argv) {
   uint32_t* baseAddress = reinterpret_cast<uint32_t*>(rawAddress);
 
   // Create the memory and assembler.
-  char memory[MEMORY_SIZE] = {0}; // Initialize to zero for compliance.
+  uint8_t memory[MEMORY_SIZE] = {0}; // Initialize to zero for compliance.
   // Use new since the constructor/destructor of Assembler take care of some
   // kernel-level things needed to write JIT memory.
-  Assembler* assembler = new Assembler(baseAddress, instructionSize);
+  Assembler assembler(baseAddress, instructionSize);
 
   // Write the prelude with the assembler.
-  assembler->prelude(memory);
+  assembler.prelude();
 
   // Read the file line by line and write it to the address space.
   char ch;
   fstream file(fileName, fstream::in);
+
+  // Compile it via the compiler.
+  Compiler compiler(&assembler);
   while (file >> ch) {
-    // TODO: Compiler.
+    compiler.compile(ch);
   }
 
   // Write the postlude with the assembler.
-  assembler->postlude();
+  assembler.postlude();
 
-  // Explicitly delete the assembler to clean up everything.
-  delete assembler;
+  // Flush and finish.
+  assembler.flush();
 
   // Jump to the actual JIT subroutine.
-  return reinterpret_cast<uint32_t(*)()>(baseAddress)();
+  return reinterpret_cast<int(*)(void*)>(baseAddress)(memory);
 }
 

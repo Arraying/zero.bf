@@ -20,9 +20,9 @@
 #include <cstdint>
 #include "register.hpp"
 
-Register::Register(uint8_t identifier) : _identifier(identifier) {}
+Register::Register(uint32_t identifier) : _identifier(identifier) {}
 
-uint8_t Register::encode() {
+uint32_t Register::encode() const {
   assert(_identifier >= 0 && _identifier < 32);
   return _identifier;
 }

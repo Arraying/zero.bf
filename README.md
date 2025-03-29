@@ -1,6 +1,6 @@
 # zero.bf
 
-A project that intends to run a Brainfuck version of Mandelbrot in <1ms.
+A project that intends to run a Brainfuck version of Mandelbrot in < 500ms.
 This project solely targets aarch64 macOS binaries.
 
 ## Building

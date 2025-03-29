@@ -27,6 +27,9 @@
 // How many instructions we want as a buffer for prelude/postlude.
 #define INS_BUFFER 16u
 
+// The number of instructions needed for branching.
+#define BR_INS 2 * INS_WIDTH
+
 // We work with a 50k memory cell, could be more, could be less.
 // Wrap-around is forbidden, so it's good to have a large space.
 constexpr size_t MEMORY_SIZE = 50000;
