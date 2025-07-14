@@ -102,28 +102,12 @@ void Compiler::flushCell() {
     return;
   }
   // Write the address to tmp1 and the value to write to tmp2.
-  __ add(tmp1, memBase, memPtr); 
-  uint8_t abs = std::abs(_cellDelta);
-  if (_cellDelta > 0) {
-    __ mov(tmp2, abs);
-    __ ldaddb(tmp1, tmp2);
-  } else if (_cellDelta < 0) {
-    // TODO: Subtraction with negative values.
-    for (uint8_t i = 0; i < abs; i++) {
-      __ ldaddb(tmp1, constNegOne);
-    }
-  }
+  __ add(tmp1, memBase, memPtr);
+  // This will treat the signed offset as an unsigned value, but that is fine
+  // given that the mov instruction with immediate supports signed values.
+  __ mov(tmp2, _cellDelta);
+  __ ldaddb(tmp1, tmp2);
   _cellDelta = 0;
-}
-
-// Repeats an operation in case it is not within numeric limits.
-template <typename Op>
-void repeatAddSubImmLimit(Op func, uint64_t abs) {
-  uint64_t iters = abs / ADD_SUB_IMM_LIMIT, rem = abs % ADD_SUB_IMM_LIMIT;
-  for (uint64_t i = 0; i < iters; i++) {
-    func(memPtr, memPtr, ADD_SUB_IMM_LIMIT);
-  }
-  func(memPtr, memPtr, rem);
 }
 
 void Compiler::flushPointer() {

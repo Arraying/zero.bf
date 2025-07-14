@@ -77,6 +77,8 @@ public:
   }
 
   // Move immediate to register.
+  // This immediate can be a negative integer too, if necessary.
+  // Such a case is treated automatically.
   inline void mov(const Register &dst, uint16_t imm) {
     // mov x0, #0
     uint32_t instr = 0xd2800000u;
