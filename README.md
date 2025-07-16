@@ -16,14 +16,14 @@ The JIT compiler does not wrap and will cause a segmenation fault.
 
 # Development
 
-Current attained peak performance: 1200 ms.
+Current attained peak performance: 800 ms.
 
 Debug builds can be generated with `make debug-interpreter` or `make debug-jit`.
 To benchmark, `make bench` runs an optimized JIT agains `mandelbrot.b`.
+This includes some `make` overhead unfortunately.
 
 List of planned optimizations:
 - Optimize file reading (`wc` inspiration).
-- Optimize `[-]` (requires lookaheads).
 - Optimize write/read with `printf`/`scanf`.
 
 Other things:

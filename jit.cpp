@@ -64,6 +64,7 @@ int main(int argc, char** argv) {
   while (file >> ch) {
     compiler.compile(ch);
   }
+  compiler.flushCompilationBuffer();
 
   // Write the postlude with the assembler.
   assembler.postlude();

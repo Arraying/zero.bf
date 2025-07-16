@@ -28,10 +28,19 @@ private:
   std::stack<size_t> _jumps;
   int8_t _cellDelta;
   int64_t _pointerDelta;
+  char _mem1;
+  char _mem2;
+  int8_t _skip;
+  void _compile(char &c, char &fut1, char &fut2);
 
 public:
   Compiler(Assembler* assembler);
+
+  // Performs a compilation of a single instruction.
   void compile(char &c);
+
+  // Flushes the compilation buffer of instructions.
+  void flushCompilationBuffer();
 
   // Flushes the cell value difference into an instruction.
   void flushCell();

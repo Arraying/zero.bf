@@ -155,6 +155,20 @@ public:
     writeNext(instr);
   }
 
+  // Store a byte in the register at the specific address.
+  inline void strb(const Register &value,
+                   const Register &base,
+                   const Register &index) {
+    // strb w0, [x0, x0];
+    uint32_t instr = 0x38206800u;
+    // First register is what to write.
+    instr |= value.encode();
+    // Base and index.
+    instr |= (base.encode() << 5);
+    instr |= (index.encode() << 16);
+    writeNext(instr);
+  }
+
   // Branch if register is zero.
   // Returns the location, such that the jump can be patched later.
   inline size_t cbz(const Register &reg) {
